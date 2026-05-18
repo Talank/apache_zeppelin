@@ -2,13 +2,12 @@ name: quick
 
 on:
   push:
-    branches-ignore:
-      - 'dependabot/**'
   pull_request:
     branches:
       - master
       - 'branch-*'
 
+  workflow_dispatch:
 permissions:
   contents: read
 
@@ -16,12 +15,12 @@ env:
   # Disable keepAlive and pool
   # https://github.com/actions/virtual-environments/issues/1499#issuecomment-689467080
   MAVEN_OPTS: >-
-      -Xms1024M -Xmx2048M -XX:MaxMetaspaceSize=1024m -XX:-UseGCOverheadLimit
-      -Dhttp.keepAlive=false
-      -Dmaven.wagon.http.pool=false
-      -Dmaven.wagon.http.retryHandler.count=3
+    -Xms1024M -Xmx2048M -XX:MaxMetaspaceSize=1024m -XX:-UseGCOverheadLimit
+    -Dhttp.keepAlive=false
+    -Dmaven.wagon.http.pool=false
+    -Dmaven.wagon.http.retryHandler.count=3
   MAVEN_ARGS: >-
-      -B --no-transfer-progress
+    -B --no-transfer-progress
 
 jobs:
   license-check:

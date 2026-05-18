@@ -2,23 +2,22 @@ name: core
 
 on:
   push:
-    branches-ignore:
-      - 'dependabot/**'
   pull_request:
     branches:
       - master
       - 'branch-*'
 
+  workflow_dispatch:
 env:
   # Disable keepAlive and pool
   # https://github.com/actions/virtual-environments/issues/1499#issuecomment-689467080
   MAVEN_OPTS: >-
-      -Xms1024M -Xmx2048M -XX:MaxMetaspaceSize=1024m -XX:-UseGCOverheadLimit
-      -Dhttp.keepAlive=false
-      -Dmaven.wagon.http.pool=false
-      -Dmaven.wagon.http.retryHandler.count=3
+    -Xms1024M -Xmx2048M -XX:MaxMetaspaceSize=1024m -XX:-UseGCOverheadLimit
+    -Dhttp.keepAlive=false
+    -Dmaven.wagon.http.pool=false
+    -Dmaven.wagon.http.retryHandler.count=3
   MAVEN_ARGS: >-
-      -B --no-transfer-progress
+    -B --no-transfer-progress
   ZEPPELIN_HELIUM_REGISTRY: helium
   SPARK_PRINT_LAUNCH_COMMAND: "true"
   SPARK_LOCAL_IP: 127.0.0.1
@@ -40,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 11 ]
+        java: [11]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,7 +63,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-zeppelin-
       - name: install application with some interpreter
-        run: ./mvnw install -Pbuild-distr -DskipTests -pl zeppelin-server,zeppelin-web,spark-submit,spark/scala-2.12,spark/scala-2.13,markdown,angular,shell -am -Pweb-classic -Phelium-dev -Pexamples ${MAVEN_ARGS}
+        run: ./mvnw install -Pbuild-distr -DskipTests -pl 
+          zeppelin-server,zeppelin-web,spark-submit,spark/scala-2.12,spark/scala-2.13,markdown,angular,shell -am 
+          -Pweb-classic -Phelium-dev -Pexamples ${MAVEN_ARGS}
       - name: install and test plugins
         run: ./mvnw package -pl zeppelin-plugins -amd ${MAVEN_ARGS}
       - name: Setup conda environment with python 3.9 and R
@@ -83,7 +84,9 @@ jobs:
           conda list
           conda info
       - name: run tests # skip spark test because we would run them in other CI
-        run: ./mvnw verify -Pusing-packaged-distr -pl zeppelin-server,zeppelin-web,spark-submit,spark/scala-2.12,spark/scala-2.13,markdown,angular,shell -am -Pweb-classic -Phelium-dev -Pexamples -Dtests.to.exclude=**/org/apache/zeppelin/spark/* -DfailIfNoTests=false
+        run: ./mvnw verify -Pusing-packaged-distr -pl 
+          zeppelin-server,zeppelin-web,spark-submit,spark/scala-2.12,spark/scala-2.13,markdown,angular,shell -am 
+          -Pweb-classic -Phelium-dev -Pexamples -Dtests.to.exclude=**/org/apache/zeppelin/spark/* -DfailIfNoTests=false
 
   # test interpreter modules except spark, flink, python, rlang, jupyter
   interpreter-test-non-core:
@@ -91,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 11 ]
+        java: [11]
     env:
       INTERPRETERS: 'hbase,jdbc,file,flink-cmd,cassandra,elasticsearch,bigquery,alluxio,livy,groovy,java,neo4j,sparql,mongodb,influxdb,shell'
     steps:
@@ -136,8 +139,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ 3.9 ]
-        java: [ 11 ]
+        python: [3.9]
+        java: [11]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -185,7 +188,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 11 ]
+        java: [11]
     steps:
       # user/password => root/root
       - name: Start mysql
@@ -228,7 +231,8 @@ jobs:
         run: |
           R -e "IRkernel::installspec()"
       - name: run tests
-        run: ./mvnw test -pl zeppelin-interpreter-integration -Pintegration -DfailIfNoTests=false -Dtest=ZeppelinClientIntegrationTest,ZeppelinClientWithAuthIntegrationTest,ZSessionIntegrationTest,ShellIntegrationTest,JdbcIntegrationTest
+        run: ./mvnw test -pl zeppelin-interpreter-integration -Pintegration -DfailIfNoTests=false 
+          -Dtest=ZeppelinClientIntegrationTest,ZeppelinClientWithAuthIntegrationTest,ZSessionIntegrationTest,ShellIntegrationTest,JdbcIntegrationTest
       - name: Print zeppelin logs
         if: always()
         run: if [ -d "logs" ]; then cat logs/*; fi
@@ -238,7 +242,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ 3.9 ]
+        python: [3.9]
         flink: [116, 117]
         include:
           # Flink 1.15 supports Python 3.6, 3.7, and 3.8
@@ -281,7 +285,9 @@ jobs:
           auto-activate: false
           use-mamba: true
       - name: run tests for flink
-        run: ./mvnw verify -pl flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -am -Pintegration -DfailIfNoTests=false -Dtest=org.apache.zeppelin.flink.*Test,FlinkIntegrationTest${{ matrix.flink }} ${MAVEN_ARGS}
+        run: ./mvnw verify -pl flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ 
+          matrix.flink }} -am -Pintegration -DfailIfNoTests=false 
+          -Dtest=org.apache.zeppelin.flink.*Test,FlinkIntegrationTest${{ matrix.flink }} ${MAVEN_ARGS}
       - name: Print zeppelin logs
         if: always()
         run: if [ -d "logs" ]; then cat logs/*; fi
@@ -292,7 +298,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 11 ]
+        java: [11]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -332,7 +338,9 @@ jobs:
         run: |
           R -e "IRkernel::installspec()"
       - name: run tests
-        run: ./mvnw test -pl zeppelin-interpreter-integration -Pintegration -Dtest=SparkSubmitIntegrationTest,ZeppelinSparkClusterTest32,SparkIntegrationTest32,ZeppelinSparkClusterTest33,SparkIntegrationTest33 -DfailIfNoTests=false ${MAVEN_ARGS}
+        run: ./mvnw test -pl zeppelin-interpreter-integration -Pintegration 
+          -Dtest=SparkSubmitIntegrationTest,ZeppelinSparkClusterTest32,SparkIntegrationTest32,ZeppelinSparkClusterTest33,SparkIntegrationTest33
+          -DfailIfNoTests=false ${MAVEN_ARGS}
 
   # test on spark for each spark version & scala version
   spark-test:
@@ -340,8 +348,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ 3.9 ]
-        java: [ 11, 17 ]
+        python: [3.9]
+        java: [11, 17]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -458,7 +466,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 11 ]
+        java: [11]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -488,7 +496,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 11 ]
+        java: [11]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
