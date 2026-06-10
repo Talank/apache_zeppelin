@@ -1,24 +1,17 @@
 name: frontend
 
 on:
-  push:
-    branches-ignore:
-      - 'dependabot/**'
-  pull_request:
-    branches:
-      - master
-      - 'branch-*'
-
+  workflow_dispatch:
 env:
   # Disable keepAlive and pool
   # https://github.com/actions/virtual-environments/issues/1499#issuecomment-689467080
   MAVEN_OPTS: >-
-      -Xms1024M -Xmx2048M -XX:MaxMetaspaceSize=1024m -XX:-UseGCOverheadLimit
-      -Dhttp.keepAlive=false
-      -Dmaven.wagon.http.pool=false
-      -Dmaven.wagon.http.retryHandler.count=3
+    -Xms1024M -Xmx2048M -XX:MaxMetaspaceSize=1024m -XX:-UseGCOverheadLimit
+    -Dhttp.keepAlive=false
+    -Dmaven.wagon.http.pool=false
+    -Dmaven.wagon.http.retryHandler.count=3
   MAVEN_ARGS: >-
-      -B --no-transfer-progress
+    -B --no-transfer-progress
   ZEPPELIN_HELIUM_REGISTRY: helium
   SPARK_PRINT_LAUNCH_COMMAND: "true"
   SPARK_LOCAL_IP: 127.0.0.1
@@ -68,13 +61,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-zeppelin-
       - name: Install application
-        run: ./mvnw clean install -DskipTests -am -pl zeppelin-web,zeppelin-web-angular -Pweb-classic -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist ${MAVEN_ARGS}
+        run: ./mvnw clean install -DskipTests -am -pl zeppelin-web,zeppelin-web-angular -Pweb-classic -Pspark-scala-2.12
+          -Pspark-3.4 -Pweb-dist ${MAVEN_ARGS}
       - name: Run headless test
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw verify -pl zeppelin-web -Pweb-classic -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist -Pweb-e2e ${MAVEN_ARGS}
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw verify -pl zeppelin-web 
+          -Pweb-classic -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist -Pweb-e2e ${MAVEN_ARGS}
       - name: Print zeppelin logs
         if: always()
         run: if [ -d "logs" ]; then cat logs/*; fi
 
+    strategy:
+      fail-fast: false
   run-playwright-e2e-tests:
     runs-on: ubuntu-24.04
     env:
@@ -83,7 +80,8 @@ jobs:
     strategy:
       matrix:
         mode: [anonymous, auth]
-        python: [ 3.9 ]
+        python: [3.9]
+      fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -122,7 +120,8 @@ jobs:
           channels: conda-forge,defaults
           channel-priority: strict
       - name: Install application
-        run: ./mvnw clean install -DskipTests -am -pl python,rlang,zeppelin-jupyter-interpreter,zeppelin-web-angular ${MAVEN_ARGS}
+        run: ./mvnw clean install -DskipTests -am -pl python,rlang,zeppelin-jupyter-interpreter,zeppelin-web-angular 
+          ${MAVEN_ARGS}
       - name: Setup Zeppelin Server (Shiro.ini)
         run: |
           export ZEPPELIN_CONF_DIR=./conf
@@ -136,7 +135,8 @@ jobs:
           mkdir -p $ZEPPELIN_E2E_TEST_NOTEBOOK_DIR
           echo "Created test notebook directory: $ZEPPELIN_E2E_TEST_NOTEBOOK_DIR"
       - name: Run headless E2E test with Maven
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw verify -pl zeppelin-web-angular -Pweb-e2e ${MAVEN_ARGS}
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw verify -pl zeppelin-web-angular 
+          -Pweb-e2e ${MAVEN_ARGS}
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         if: always()
@@ -210,3 +210,5 @@ jobs:
       - name: Print zeppelin logs
         if: always()
         run: if [ -d "logs" ]; then cat logs/*; fi
+    strategy:
+      fail-fast: false
